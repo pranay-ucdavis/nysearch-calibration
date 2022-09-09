@@ -10,25 +10,14 @@ valSGWindowSize=21; % Savitzky-Golay filter parameter: Frame/Window length
 valSGMOrder=7; % Savitzky-Golay filter parameter: Polynomial order
 %------------------------------------------------------------------------------------------------------------%
 %------------------------------------------------------------------------------------------------------------%
-deltaRT = 15;
-
-
+deltaRT = 15; % RT range to consider
 [file,path] = uigetfile('*_Pos.xls');
 filename = [path file];
 RTs_model1 = [1.3885, 1.0258, 0.8679, 0.6592, 0.7568, 0.9527; 0.0334, -0.4965, - 0.1725, - 0.2656, -0.1164, -0.4739]';
 
-% figure 
-% hold on
-% files = dir('C:\Users\chakr\OneDrive\Desktop\NYSEARCH\Runs_2022-09-08_Night\Runs_2022-09-08_Night\data/*.xls');
-% mylegends = [];
-
 allpeaks = {};
 
 j = 1;
-% for file = files'
-%     S1 = file.folder;
-%     S2 = file.name;
-%     filename = [S1 '/' S2]
     format long g
     [ Vc, timeStamp, amplitude ] = DMSRead(filename);
     tempMat = amplitude;
@@ -69,7 +58,6 @@ j = 1;
         locs(find(diff(locs)<30, 1) + 1) = [];
         p = length(locs);
     end
-%    locs = locs(locs>200);
    locs1 = locs( locs< 850);
    locs2= locs( locs>=1300);
    locs = [locs1 locs2];
@@ -82,10 +70,13 @@ j = 1;
  localpeakindex = 3;
  RT_average = [342.9473684	379.7894737	464	580.4210526	657.7894737	1318.578947];
  for k =1:1:6
-     checkRT = locs(1,k);
+     lookRT = RT_average(1,k);
+     distanceRT = abs(locs - lookRT);
+     [M_value,I_index] = min(distanceRT)
+     checkRT = locs(1,I_index);
      try
-     valMinRT = locs(1,k) -deltaRT;
-     valMaxRT = locs(1,k)+ deltaRT;
+     valMinRT = checkRT -deltaRT;
+     valMaxRT = checkRT + deltaRT;
      tempdata = mydata(valMinRT:valMaxRT,1);
      tempdata = sort(tempdata,'descend')
      III = sum(tempdata(1:7,1));
@@ -99,7 +90,6 @@ j = 1;
  j = j+1;
  
 
-
 Totalconcentration(Totalconcentration < 0.1) = 0;
 Totalconcentration(Totalconcentration > 5) = 5;
 
@@ -110,12 +100,13 @@ IPM = Totalconcentration(4,1);
 TBM = Totalconcentration(5,1);
 THT = Totalconcentration(6,1);
 
-checkchemicals = ["ETM";"DMS";"NPM";"IPM";"TBM";"THT"];%,"DMS","NPM","IPM"];
-Chemical_concentration = [ETM;DMS;NPM;IPM;TBM;THT];
+Chemicalname = ["ETM";"DMS";"NPM";"IPM";"TBM";"THT"];%,"DMS","NPM","IPM"];
+Chemical_concentration_ppm = [ETM;DMS;NPM;IPM;TBM;THT];
 
-concentrationresult = table(checkchemicals,Chemical_concentration);
+concentrationresult = table(Chemicalname,Chemical_concentration_ppm);
 
-fig = uifigure('Position',[100 100 752 250]);
-uit = uitable('Parent',fig,'Position',[25 50 700 200]);
+fig = uifigure('Position',[0 0 752 250]);
+uit = uitable('Parent',fig,'Position',[25 25 700 200]);
 uit.Data = concentrationresult;
+
 
